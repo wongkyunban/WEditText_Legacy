@@ -455,11 +455,11 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
     }
 
     public <T> void setOptions(List<T> options) {
-        this.mOptions = options;
-        this.displayedOptions.addAll(options);
-        if (ObjectUtils.isNotNull(options) && options.size() > 0) {
-            setDrawableVisibility(true);
-        } else {
+        if(ObjectUtils.isNotNull(options)){
+            this.mOptions = options;
+            this.displayedOptions.addAll(options);
+            setDrawableVisibility(options.size() > 0);
+        }else{
             setDrawableVisibility(false);
         }
     }

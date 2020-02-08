@@ -278,9 +278,12 @@ public class SimpleSpinnerEditText extends EditText implements AdapterView.OnIte
 
     }
     public <T> void setOptions(List<T> options) {
-        this.mOptions = options;
+
         if (ObjectUtils.isNotNull(options)) {
+            this.mOptions = options;
             setDrawableVisibility(options.size() > 0);
+        }else{
+            setDrawableVisibility(false);
         }
     }
 
