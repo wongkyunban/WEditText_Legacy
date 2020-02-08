@@ -20,7 +20,7 @@ allprojects {
 __Step 2.__ Add the dependency
 ```java
 dependencies {
-  implementation 'com.github.wongkyunban:WEditText_Legacy:v1.0.1'
+  implementation 'com.github.wongkyunban:WEditText_Legacy:v1.0.2'
 }
 ```
 
