@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    tools:context=".MainActivity">
+
+
+    <com.wong.widget.legacy.widget.SpinnerEditText
+        android:id="@+id/set_select_input"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:drawableRight="@drawable/arrow_down" />
+
+
+    <com.wong.widget.legacy.widget.ClearEditText
+        android:id="@+id/cet"
+        android:layout_width="130dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="200dp"
+        android:layout_below="@id/set_select_input" />
+
+    <com.wong.widget.legacy.widget.SimpleSpinnerEditText
+        android:id="@+id/sset"
+        android:layout_width="130dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_below="@id/cet"
+        />
+
+
+</RelativeLayout>
