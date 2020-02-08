@@ -1,4 +1,13 @@
 <resources>
 
-    <!-- Base application theme. -->
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:textSize">18sp</item>
+        <!--          <item name="colorAccent">@color/colorPrimary</item> -->
+        <!-- AppCompatEditText默认状态状态设置底线颜色 -->
+        <!--   <item name="colorControlNormal">#3F51b5</item>   -->
+        <!-- AppCompatEditText选择的底线颜色 -->
+        <!--         <item name="colorControlActivated">#c6174e</item> -->
+    </style>
 </resources>
