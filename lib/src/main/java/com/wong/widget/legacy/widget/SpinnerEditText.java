@@ -18,11 +18,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -39,13 +39,12 @@ import java.util.List;
 
 /**
  * usage demo:
- * String[] strings = new String[10];
- * for (int i = 0; i < 10; i++) {
- * strings[i] = "No." + i + "号";
+ * SpinnerEditText spinnerEditText = (SpinnerEditText)findViewById(R.id.set_select_input);
+ * List<String> list = new ArrayList<String>();
+ * for (int i = 0; i < 50; i++) {
+ * list.add("NNo." + i + "号");
  * }
- * SimpleSpinnerEditText simpleSpinnerEditText = findViewById(R.id.sset);
- * BaseAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, strings);
- * simpleSpinnerEditText.setAdapter(adapter);
+ * spinnerEditText.setOptions(list);
  */
 public class SpinnerEditText extends EditText implements AdapterView.OnItemClickListener, TextWatcher {
     /*popup window to show the selection*/
@@ -58,9 +57,11 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
     private Drawable popupBackground;
     private Drawable popupDivider;
     private float popupDividerHeight;
-    private BaseAdapter adapter;
-    private List<Object> mOptions = new ArrayList<Object>();
+    private SpinnerAdapter adapter = new SpinnerAdapter(getContext());
+    private List mOptions;
     private List<Object> displayedOptions = new ArrayList<Object>();
+    /*count of hint,while you are typing*/
+    private int hintCount = 4;
 
     public SpinnerEditText(Context context) {
         this(context, null);
@@ -85,8 +86,8 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
             popupBackground = typedArray.getDrawable(R.styleable.SpinnerEditText_popup_background);
             popupDivider = typedArray.getDrawable(R.styleable.SpinnerEditText_popup_divider);
             popupDividerHeight = typedArray.getDimension(R.styleable.SimpleSpinnerEditText_popup_divider_height, DensityUtils.dp2px(context, 1));
-            itemTextColor = typedArray.getColor(R.styleable.SpinnerEditText_popup_item_text_color,itemTextColor);
-            itemTextSize = typedArray.getDimension(R.styleable.SpinnerEditText_popup_item_text_size,DensityUtils.sp2px(getContext(),18));
+            itemTextColor = typedArray.getColor(R.styleable.SpinnerEditText_popup_item_text_color, itemTextColor);
+            itemTextSize = typedArray.getDimension(R.styleable.SpinnerEditText_popup_item_text_size, DensityUtils.sp2px(getContext(), 18));
             typedArray.recycle();
         }
 
@@ -97,6 +98,7 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
         setLongClickable(false);
         setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         mListView = new ListView(context);
+        mListView.setAdapter(adapter);
         mListView.setBackground(popupBackground);
         mListView.setDivider(popupDivider);
         mListView.setDividerHeight((int) popupDividerHeight);
@@ -175,6 +177,10 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
         this.itemTextSize = itemTextSize;
     }
 
+    public void setHintCount(int hintCount) {
+        this.hintCount = hintCount;
+    }
+
     @Override
     public void setCompoundDrawables(Drawable left, Drawable top, Drawable right, Drawable bottom) {
         super.setCompoundDrawables(left, top, right, bottom);
@@ -218,7 +224,7 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
         switch (event.getAction()) {
             case MotionEvent.ACTION_UP:
                 if (getCompoundDrawables()[2] != null) {
-                    int start = getWidth() - getTotalPaddingRight() + getPaddingRight();
+                    int start = getWidth() - getTotalPaddingRight() + getPaddingRight()-DensityUtils.dp2px(getContext(),11);
                     int end = getWidth();
                     boolean available = (event.getX() > start) && (event.getX() < end);
                     if (available) {
@@ -245,11 +251,10 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
             return;
         }
 
-        adapter = new ArrayAdapter<Object>(getContext(), R.layout.simple_list_item_w,R.id.sp_item_text,displayedOptions);
-        TextView tv = (TextView)LayoutInflater.from(getContext()).inflate(R.layout.simple_list_item_w,null).findViewById(R.id.sp_item_text);
-        tv.setTextColor(itemTextColor);
-        tv.setTextSize(itemTextSize);
-        mListView.setAdapter(adapter);
+        adapter.setList(displayedOptions);
+        adapter.setItemTextColor(itemTextColor);
+        adapter.setItemTextSize(itemTextSize);
+        adapter.notifyDataSetChanged();
         mListView.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
         int measuredHeight = getMeasuredHeight();
 //        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
@@ -292,6 +297,83 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
 
     }
 
+    private static class SpinnerAdapter extends BaseAdapter {
+        private List<Object> list = new ArrayList<Object>();
+        private int itemTextColor;
+        private float itemTextSize;
+        private Context mContext;
+
+        public SpinnerAdapter(Context context) {
+            this.mContext = context;
+        }
+
+
+        public SpinnerAdapter(Context context,List list,int itemTextColor,float itemTextSize) {
+            this.mContext = context;
+            this.list = list;
+            this.itemTextColor = itemTextColor;
+            this.itemTextSize = itemTextSize;
+        }
+
+        public void setList(List<Object> list) {
+            this.list = list;
+        }
+
+        public void setItemTextSize(float itemTextSize) {
+            this.itemTextSize = itemTextSize;
+        }
+
+        public void setItemTextColor(int itemTextColor) {
+            this.itemTextColor = itemTextColor;
+        }
+
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return list.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            ViewHolder holder = null;
+            if (convertView == null) {
+                holder = new ViewHolder();
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.simple_list_item_w, null, false);
+                holder.itemTextView = (TextView) convertView.findViewById(R.id.sp_item_text);
+                convertView.setTag(holder);
+
+                if (itemTextColor != 0)
+                    holder.itemTextView.setTextColor(itemTextColor);
+                if (itemTextSize != 0)
+                    holder.itemTextView.setTextSize(itemTextSize);
+
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            if (list != null) {
+                final String itemName = list.get(position).toString();
+                if (holder.itemTextView != null) {
+                    holder.itemTextView.setText(itemName);
+                }
+            }
+            return convertView;
+        }
+
+    }
+
+    private static class ViewHolder {
+        TextView itemTextView;
+    }
 
     private void closeInputMethod() {
         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -326,21 +408,31 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
     public void onTextChanged(CharSequence s, int start, int before, int count) {
 
         if (ObjectUtils.isNull(mPopupWindow) || ObjectUtils.isNull(getText())) return;
-        if (!TextUtils.isEmpty(s)) {
+        if (!TextUtils.isEmpty(s) && ObjectUtils.isNotNull(mOptions) && ObjectUtils.isNotNull(displayedOptions)) {
 
             boolean isSame = false;
             displayedOptions.clear();
+            List<Object> temp = new ArrayList<Object>();
             for (Object obj : mOptions) {
                 String objStr = obj.toString().toUpperCase();
                 if (objStr.equals(s.toString().toUpperCase())) {
                     isSame = true;
                     mPopupWindow.dismiss();
+                    temp.clear();
                     break;
                 }
                 if (objStr.contains(s.toString().toUpperCase())) {
-                    displayedOptions.add(obj);
+                    temp.add(obj);
                 }
             }
+            int size = temp.size();
+
+            if(size > hintCount){
+                displayedOptions.addAll(temp.subList(0,hintCount));
+            }else{
+                displayedOptions.addAll(temp);
+            }
+
 
             if (!isSame) {
                 mPopupWindow.dismiss();
@@ -362,7 +454,7 @@ public class SpinnerEditText extends EditText implements AdapterView.OnItemClick
         return mOptions;
     }
 
-    public void setOptions(List<Object> options) {
+    public <T> void setOptions(List<T> options) {
         this.mOptions = options;
         this.displayedOptions.addAll(options);
         if (ObjectUtils.isNotNull(options) && options.size() > 0) {

@@ -2,10 +2,12 @@ package com.wong.wedittext_legacy;
 
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 
+import com.wong.widget.legacy.utils.DensityUtils;
 import com.wong.widget.legacy.widget.ClearEditText;
 import com.wong.widget.legacy.widget.SimpleSpinnerEditText;
 import com.wong.widget.legacy.widget.SpinnerEditText;
@@ -20,11 +22,13 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         SpinnerEditText spinnerEditText = (SpinnerEditText)findViewById(R.id.set_select_input);
-        List<Object> list = new ArrayList<Object>();
+        List<String> list = new ArrayList<String>();
         for (int i = 0; i < 50; i++) {
-            list.add("No." + i + "号");
+            list.add("NNo." + i + "号");
         }
         spinnerEditText.setOptions(list);
+        spinnerEditText.setItemTextColor(0xff00ff00);
+        spinnerEditText.setItemTextSize(DensityUtils.sp2px(this,10));
 
         ClearEditText cet = (ClearEditText)findViewById(R.id.cet);
 //        cet.setShakeAnimation();
@@ -33,12 +37,16 @@ public class MainActivity extends Activity {
 //        cet.setCompoundDrawablesRelative(null,null,drawable,null);
 
         /*SimpleSpinnerEditText*/
-        List<Object> strings = new ArrayList<Object>();
-        for (int i = 0; i < 50; i++) {
-            strings.add("No." + i + "号");
-        }
         SimpleSpinnerEditText simpleSpinnerEditText = (SimpleSpinnerEditText)findViewById(R.id.sset);
+
+        List<Bean> strings = new ArrayList<Bean>();
+        for (int i = 0; i < 50; i++) {
+            Bean bean = new Bean("Tom"+i,"NO."+i);
+            strings.add(bean);
+        }
         simpleSpinnerEditText.setOptions(strings);
+        simpleSpinnerEditText.setItemTextColor(Color.BLUE);
+        simpleSpinnerEditText.setItemTextSize(DensityUtils.sp2px(this,5));
 //        simpleSpinnerEditText.setPopupDivider(getDrawable(R.drawable.divider_bg));
 //        simpleSpinnerEditText.setPopupDividerHeight(80);
 

@@ -15,11 +15,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -36,13 +36,14 @@ import java.util.List;
 
 /**
  * usage demo:
- * String[] strings = new String[10];
- * for (int i = 0; i < 10; i++) {
- * strings[i] = "No." + i + "号";
- * }
- * SimpleSpinnerEditText simpleSpinnerEditText = findViewById(R.id.sset);
- * BaseAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, strings);
- * simpleSpinnerEditText.setAdapter(adapter);
+ *         SimpleSpinnerEditText simpleSpinnerEditText = (SimpleSpinnerEditText)findViewById(R.id.sset);
+ *
+ *         List<Bean> strings = new ArrayList<Bean>();
+ *         for (int i = 0; i < 50; i++) {
+ *             Bean bean = new Bean("Tom"+i,"NO."+i);
+ *             strings.add(bean);
+ *         }
+ *         simpleSpinnerEditText.setOptions(strings);
  */
 public class SimpleSpinnerEditText extends EditText implements AdapterView.OnItemClickListener {
     /*popup window to show the selection*/
@@ -55,8 +56,8 @@ public class SimpleSpinnerEditText extends EditText implements AdapterView.OnIte
     private Drawable popupBackground;
     private Drawable popupDivider;
     private float popupDividerHeight;
-    private BaseAdapter adapter;
-    private List<Object> mOptions = new ArrayList<Object>();
+    private SpinnerAdapter adapter = new SpinnerAdapter(getContext());
+    private List mOptions = new ArrayList();
 
     public SimpleSpinnerEditText(Context context) {
         this(context, null);
@@ -91,6 +92,7 @@ public class SimpleSpinnerEditText extends EditText implements AdapterView.OnIte
         setLongClickable(false);
         setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         mListView = new ListView(context);
+        mListView.setAdapter(adapter);
         mListView.setBackground(popupBackground);
         mListView.setDivider(popupDivider);
         mListView.setDividerHeight((int) popupDividerHeight);
@@ -210,9 +212,10 @@ public class SimpleSpinnerEditText extends EditText implements AdapterView.OnIte
         switch (event.getAction()) {
             case MotionEvent.ACTION_UP:
                 if (getCompoundDrawables()[2] != null) {
-                    int start = getWidth() - getTotalPaddingRight() + getPaddingRight();
+                    int start = getWidth() - getTotalPaddingRight() + getPaddingRight()-DensityUtils.dp2px(getContext(),11);
                     int end = getWidth();
-                    boolean available = (event.getX() > start) && (event.getX() < end);
+                    boolean available = (event.getX() >= start) && (event.getX() <= end);
+
                     if (available) {
                         closeInputMethod();
                         postDelayed(new Runnable() {
@@ -235,11 +238,10 @@ public class SimpleSpinnerEditText extends EditText implements AdapterView.OnIte
         if (ObjectUtils.isNull(mOptions) || mOptions.size() == 0) {
             return;
         }
-        adapter = new ArrayAdapter<Object>(getContext(), R.layout.simple_list_item_w,R.id.sp_item_text,mOptions);
-        TextView tv = (TextView) LayoutInflater.from(getContext()).inflate(R.layout.simple_list_item_w,null).findViewById(R.id.sp_item_text);
-        tv.setTextColor(itemTextColor);
-        tv.setTextSize(itemTextSize);
-        mListView.setAdapter(adapter);
+        adapter.setList(mOptions);
+        adapter.setItemTextColor(itemTextColor);
+        adapter.setItemTextSize(itemTextSize);
+        adapter.notifyDataSetChanged();
         mListView.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
         int measuredHeight = getMeasuredHeight();
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
@@ -275,8 +277,7 @@ public class SimpleSpinnerEditText extends EditText implements AdapterView.OnIte
 
 
     }
-
-    public void setOptions(List<Object> options) {
+    public <T> void setOptions(List<T> options) {
         this.mOptions = options;
         if (ObjectUtils.isNotNull(options)) {
             setDrawableVisibility(options.size() > 0);
@@ -306,5 +307,82 @@ public class SimpleSpinnerEditText extends EditText implements AdapterView.OnIte
     private void setDrawableVisibility(boolean available) {
         Drawable d = available ? drawable : null;
         super.setCompoundDrawables(getCompoundDrawables()[0], getCompoundDrawables()[1], d, getCompoundDrawables()[3]);
+    }
+    private static class SpinnerAdapter extends BaseAdapter {
+        private List<Object> list = new ArrayList<Object>();
+        private int itemTextColor;
+        private float itemTextSize;
+        private Context mContext;
+
+        public SpinnerAdapter(Context context) {
+            this.mContext = context;
+        }
+
+
+        public SpinnerAdapter(Context context,List list,int itemTextColor,float itemTextSize) {
+            this.mContext = context;
+            this.list = list;
+            this.itemTextColor = itemTextColor;
+            this.itemTextSize = itemTextSize;
+        }
+
+        public void setList(List<Object> list) {
+            this.list = list;
+        }
+
+        public void setItemTextSize(float itemTextSize) {
+            this.itemTextSize = itemTextSize;
+        }
+
+        public void setItemTextColor(int itemTextColor) {
+            this.itemTextColor = itemTextColor;
+        }
+
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return list.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            SimpleSpinnerEditText.ViewHolder holder = null;
+            if (convertView == null) {
+                holder = new SimpleSpinnerEditText.ViewHolder();
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.simple_list_item_w, null, false);
+                holder.itemTextView = (TextView) convertView.findViewById(R.id.sp_item_text);
+                convertView.setTag(holder);
+
+                if (itemTextColor != 0)
+                    holder.itemTextView.setTextColor(itemTextColor);
+                if (itemTextSize != 0)
+                    holder.itemTextView.setTextSize(itemTextSize);
+
+            } else {
+                holder = (SimpleSpinnerEditText.ViewHolder) convertView.getTag();
+            }
+
+            if (list != null) {
+                final String itemName = list.get(position).toString();
+                if (holder.itemTextView != null) {
+                    holder.itemTextView.setText(itemName);
+                }
+            }
+            return convertView;
+        }
+
+    }
+
+    private static class ViewHolder {
+        TextView itemTextView;
     }
 }
